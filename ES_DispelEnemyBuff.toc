@@ -1,0 +1,9 @@
+## Interface: 90002
+## Title: ES_DispelEnemyBuff
+## Author: Elêssar 
+## Notes: Show dispellable (by you) buffs on enemy nameplate.
+## Version: 1.0.0
+## OptionalDeps: Ace3
+
+Libs\Libs.xml
+core.lua
