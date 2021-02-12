@@ -15,5 +15,6 @@ Created spesificly for my own setup of nameplates. But hosting on GitHub so my f
 - (Bugfix): General tweaks.
 - (New): Settings now stored per account.
 - (New): Settings-window and ability to test the display on current target.
+
   Type "/es_deb" to bring up the settings.
   Type "/es_deb reset" to revert back to default values
