@@ -2,8 +2,10 @@
 ## Title: ES_DispelEnemyBuff
 ## Author: Elêssar 
 ## Notes: Show dispellable (by you) buffs on enemy nameplate.
-## Version: 1.0.0
+## Version: 1.0.1
 ## OptionalDeps: Ace3
+## SavedVariables: ESDEB_DB
 
 Libs\Libs.xml
 core.lua
+var.lua
