@@ -963,6 +963,11 @@ function ES_DispelEnemyBuff:OnInitialize()
 	local _, _, classID = UnitClass("player")
 	local load = true
 	testing = false
+	if not ESDEB_DB["settings"] then
+		ESDEB_DB = addon.defaultDB
+		C_Timer.After(5, printInit)
+	end
+	ES_UpdateVar()
 	if (classID == 12) or (classID == 8) or (classID == 7) or (classID == 5) or (classID == 3) then
 		canPurge = "Magic"
 	elseif (classID == 11) or (classID == 3) or (classID == 4) then
@@ -985,11 +990,6 @@ function ES_DispelEnemyBuff:OnInitialize()
 		end
 	end
 	if load then
-		if not ESDEB_DB["settings"] then
-			ESDEB_DB = addon.defaultDB
-			C_Timer.After(5, printInit)
-		end
-		ES_UpdateVar()
 		if not _G["ES_DispelEnemyBuff_Settings"] then
 			CreateSettingsFrame()
 		end
