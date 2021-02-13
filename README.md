@@ -5,11 +5,12 @@ Created spesificly for my own setup of nameplates. But hosting on GitHub so my f
 
 ---
 ---
-### Latest Release:
+[Latest Release](/../../releases/latest) :file_folder:
 
-- [1.0.1](/../../releases/latest) :file_folder:
+:memo: Changes: v1.0.2
+- (Bugfix): Variables now loaded earlier to prevent an issue on certain classes.
 
-:memo: Changes:
+:memo: Changes: v1.0.1
 - (Bugfix): Logic for centered growth finally works
 - (Bugfix): Border replaced with texture. Should no longer glitch on certain sizes
 - (Bugfix): General tweaks.
