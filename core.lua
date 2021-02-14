@@ -125,7 +125,6 @@ end
 
 local function UpdateNameplate(unit)
 	local parent = C_NamePlate.GetNamePlateForUnit(unit)
-	if not parent then return end
 	local aura_number = 0
 	if GetRaidTargetIndex(unit) then
 		aura_number = 1
@@ -347,7 +346,7 @@ end
 
 local function ES_CheckUnit(unit)
 	if not unit then return false end
-	if not UnitExists(unit) or unit == "target" then return false end
+	if not UnitExists(unit) or unit == "target" or not C_NamePlate.GetNamePlateForUnit(unit) then return false end
 	local unitReaction = UnitReaction(unit, "player")
 	local isPlayer = UnitIsPlayer(unit)
 	if (unitReaction and unitReaction >= 5) or not (not isPlayer or showPlayers) then
