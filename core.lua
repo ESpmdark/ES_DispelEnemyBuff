@@ -3,7 +3,7 @@ local _, addon = ...
 ESDEB_DB = {}
 --/ Vars
 local framePool,auraPool,btnPool = {},{},{}
-local currTab,tarNPname,testing,backdrop_tmp
+local currTab,testing
 local canPurge = "none"
 local initpad,chkbtns,nrInput,numFrames = 5,1,1,0
 local UIscale = UIParent:GetEffectiveScale()
@@ -94,7 +94,6 @@ local function ForceGenerate()
 	end
 	for _,frame in pairs(framePool) do
 		if frame.show then
-			frame.plate = nil
 			frame.show = false
 			frame.unit = nil
 			frame:Hide()
@@ -111,52 +110,22 @@ local function cSteal(spellId, isStealable)
 end
 
 local function HideFrame(unit)
-	local lUnit = false
-	if (unit == "target") then
-		lUnit = tarNPname
-	elseif C_NamePlate.GetNamePlateForUnit(unit) then
-		lUnit = C_NamePlate.GetNamePlateForUnit(unit):GetName()
-	end
-	
-	if lUnit then
-		auraPool[lUnit] = nil
-		auraPool[lUnit] = {}
-		for _,frame in pairs(framePool) do
-			if (frame.plate == lUnit) then
-				frame.plate = nil
-				frame.show = false
-				frame.test = false
-				frame.unit = nil
-				AutoCastShine_AutoCastStop(frame.shine)
-				frame.shine:Hide()
-				frame.cd:Clear()
-				frame:Hide()
-			end
-		end
-	else
-		for _,frame in pairs(framePool) do
-			if (frame.show) and (frame.unit == unit) then
-				frame.plate = nil
-				frame.show = false
-				frame.test = false
-				frame.unit = nil
-				AutoCastShine_AutoCastStop(frame.shine)
-				frame.shine:Hide()
-				frame.cd:Clear()
-				frame:Hide()
-			end
+	for _,frame in pairs(framePool) do
+		if (frame.show) and (frame.unit == unit) then
+			frame.show = false
+			frame.test = false
+			frame.unit = nil
+			AutoCastShine_AutoCastStop(frame.shine)
+			frame.shine:Hide()
+			frame.cd:Clear()
+			frame:Hide()
 		end
 	end
-	auraPool[unit] = nil
-	auraPool[unit] = {}
 end
 
 local function UpdateNameplate(unit)
 	local parent = C_NamePlate.GetNamePlateForUnit(unit)
-	if not parent then
-		HideFrame(unit)
-		return
-	end
+	if not parent then return end
 	local aura_number = 0
 	if GetRaidTargetIndex(unit) then
 		aura_number = 1
@@ -231,10 +200,8 @@ local function UpdateNameplate(unit)
 		
 		if handletest then
 			frame.test = true
-			frame.plate = C_NamePlate.GetNamePlateForUnit("target"):GetName()
 			expire = GetTime() + state.expirationTime
 		else
-			frame.plate = parent:GetName()
 			if state.expirationTime then
 				expire = GetTime() - (dur - (state.expirationTime - GetTime()))
 			end
@@ -251,7 +218,9 @@ local function UpdateNameplate(unit)
 			frame.shine:Show()
 		end
 		frame:Show()
-	end    
+	end
+	auraPool[unit] = nil
+	auraPool[unit] = {}
 end
 
 local function NEAisShowBuff(state)
@@ -292,17 +261,16 @@ local function ES_CheckAura(unit)
 	local locstates = {}
     local bolster = 0
 	local numAuras = 0
-	
+	HideFrame(unit)
 	if showExplosive and UnitName(unit) and (UnitName(unit) == "Explosives") then
 			numAuras = 1
-			state = {
+			state = { -- Create a fake aura for explosive
 				show = true,
 				spellId = 240446,
 				unit = unit,
 				duration = 6,
 				expirationTime = GetTime() + 6,
 				icon = 2175503,
-				plate = C_NamePlate.GetNamePlateForUnit(unit),
 				stacks = 0,
 				type = "Expl",
 				cloneId = unit.."-"..240446,
@@ -322,7 +290,7 @@ local function ES_CheckAura(unit)
 			if (not blacklist[spellId]) then
 				if whitelist[spellId] or (isStealable and debuffType == canPurge) or rBelf(debuffType) then
 					numAuras = numAuras + 1
-					if (spellId == 209859 ) then -- Handle bolster stacks
+					if (spellId == 209859 ) then -- Iterate and combine all bolster auras into one
 						bolster = bolster + 1
 						state = {
 							show = true,
@@ -331,7 +299,6 @@ local function ES_CheckAura(unit)
 							duration = duration,
 							expirationTime = expirationTime,
 							icon = icon,
-							plate = C_NamePlate.GetNamePlateForUnit(unit),
 							stacks = bolster,
 							type = debuffType,
 							cloneId = unit.."-"..spellId,
@@ -345,7 +312,6 @@ local function ES_CheckAura(unit)
 							duration = duration,
 							expirationTime = expirationTime,
 							icon = icon,
-							plate = C_NamePlate.GetNamePlateForUnit(unit),
 							stacks = count or 0,
 							type = debuffType,
 							cloneId = unit.."-"..spellId,
@@ -381,7 +347,7 @@ end
 
 local function ES_CheckUnit(unit)
 	if not unit then return false end
-	if not UnitExists(unit) then return false end
+	if not UnitExists(unit) or unit == "target" then return false end
 	local unitReaction = UnitReaction(unit, "player")
 	local isPlayer = UnitIsPlayer(unit)
 	if (unitReaction and unitReaction >= 5) or not (not isPlayer or showPlayers) then
@@ -397,13 +363,8 @@ end
 ES_DispelEnemyBuff:RegisterEvent("NAME_PLATE_UNIT_REMOVED", "Handler1")
 
 function ES_DispelEnemyBuff:Handler2(event, unit, ...)
-	if not ES_CheckUnit(unit) then return end	
-	if (event == "PLAYER_TARGET_CHANGED") then tarNPname = C_NamePlate.GetNamePlateForUnit("target"):GetName() end
-	if (unit == "target") and UnitExists("target") and not C_NamePlate.GetNamePlateForUnit("target") then return end
-    if C_NamePlate.GetNamePlateForUnit(unit) then HideFrame(unit) end
-	ES_CheckAura(unit)
+	if ES_CheckUnit(unit) then ES_CheckAura(unit) end
 end
-ES_DispelEnemyBuff:RegisterEvent("PLAYER_TARGET_CHANGED", "Handler2")
 ES_DispelEnemyBuff:RegisterEvent("UNIT_AURA", "Handler2")
 
 function ES_DispelEnemyBuff:Handler3(event, unit, ...)
@@ -607,6 +568,7 @@ local function ErrorPopup(msg)
 		frame:Hide()
 	end)
 end
+
 local function AddSpell(spellId,input)
 	if not tonumber(spellId) then
 		ErrorPopup('Not a valid number!')
@@ -771,7 +733,6 @@ local function ESDEB_StopTesting()
 	testing = false
 	for _,frame in pairs(framePool) do
 		if (frame.test == true) then
-			frame.plate = nil
 			frame.show = false
 			frame.test = false
 			frame.unit = nil
@@ -781,6 +742,8 @@ local function ESDEB_StopTesting()
 			frame:Hide()
 		end
 	end
+	auraPool = nil
+	auraPool = {}
 end
 
 local function CreateSettingsFrame()
