@@ -7,6 +7,10 @@ Created spesificly for my own setup of nameplates. But hosting on GitHub so my f
 ---
 [Latest Release](/../../releases/latest) :file_folder:
 
+:memo: Changes: v1.0.3
+- (Bugfix): Reworked old unit-handling. Fixes issue of duplicate auras appearing.
+- (General): Clean-up of code to improve performance.
+
 :memo: Changes: v1.0.2
 - (Bugfix): Variables now loaded earlier to prevent an issue on certain classes.
 
