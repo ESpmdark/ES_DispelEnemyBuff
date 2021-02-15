@@ -4,7 +4,6 @@ ESDEB_DB = {}
 --/ Vars
 local framePool,auraPool,btnPool = {},{},{}
 local currTab,testing
-local canPurge = "none"
 local initpad,chkbtns,nrInput,numFrames = 5,1,1,0
 local UIscale = UIParent:GetEffectiveScale()
 local xOffset, yOffset, auraWidth, auraHeight, cWidth, cHeight
@@ -287,7 +286,7 @@ local function ES_CheckAura(unit)
 			if dType then debuffType = dType else debuffType = "" end
 			
 			if (not blacklist[spellId]) then
-				if whitelist[spellId] or (isStealable and debuffType == canPurge) or rBelf(debuffType) then
+				if whitelist[spellId] or (isStealable and addon.canPurge[addon.cID][debuffType]) or rBelf(debuffType) then
 					numAuras = numAuras + 1
 					if (spellId == 209859 ) then -- Iterate and combine all bolster auras into one
 						bolster = bolster + 1
@@ -930,11 +929,7 @@ function ES_DispelEnemyBuff:OnInitialize()
 		C_Timer.After(5, printInit)
 	end
 	ES_UpdateVar()
-	if (classID == 12) or (classID == 8) or (classID == 7) or (classID == 5) or (classID == 3) then
-		canPurge = "Magic"
-	elseif (classID == 11) or (classID == 3) or (classID == 4) then
-		canPurge = ""
-	else
+	if not addon.canPurge[addon.cID] then
 		local unreg = false
 		for k,v in pairs(whitelist) do
 			if v then
@@ -945,10 +940,9 @@ function ES_DispelEnemyBuff:OnInitialize()
 		if not showExplosive and not unreg and (not showBE or not(addon.rID == 10))  then
 			load = false
 			print('|cFFFF0000ES_DispelEnemyBuff |r','No auras is set to be tracked. Addon disabled!')
-			ES_DispelEnemyBuff:UnregisterEvent("NAME_PLATE_UNIT_REMOVED")
-			ES_DispelEnemyBuff:UnregisterEvent("PLAYER_TARGET_CHANGED")
 			ES_DispelEnemyBuff:UnregisterEvent("UNIT_AURA")
 			ES_DispelEnemyBuff:UnregisterEvent("NAME_PLATE_UNIT_ADDED")
+			ES_DispelEnemyBuff:UnregisterEvent("NAME_PLATE_UNIT_REMOVED")
 		end
 	end
 	if load then

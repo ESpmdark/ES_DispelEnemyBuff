@@ -5,6 +5,32 @@ addon.rID = rID
 local _, _, cID = UnitClass("player")
 addon.cID = cID
 
+local canPurge = {
+	[3] = {
+		["Magic"] = true,
+		[""] = true,
+	},
+	[4] = {
+		[""] = true
+	},
+	[5] = {
+		["Magic"] = true
+	},
+	[7] = {
+		["Magic"] = true
+	},
+	[8] = {
+		["Magic"] = true
+	},
+	[11] = {
+		[""] = true
+	},
+	[12] = {
+		["Magic"] = true
+	}
+}
+addon.canPurge = canPurge
+
 local racialID = {
 	[1] = 69179,
 	[2] = 155145,
