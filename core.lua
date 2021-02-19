@@ -358,12 +358,10 @@ end
 function ES_DispelEnemyBuff:Handler1(event, unit, ...)
 	HideFrame(unit)
 end
-ES_DispelEnemyBuff:RegisterEvent("NAME_PLATE_UNIT_REMOVED", "Handler1")
 
 function ES_DispelEnemyBuff:Handler2(event, unit, ...)
 	if ES_CheckUnit(unit) then ES_CheckAura(unit) end
 end
-ES_DispelEnemyBuff:RegisterEvent("UNIT_AURA", "Handler2")
 
 function ES_DispelEnemyBuff:Handler3(event, unit, ...)
 	if not ES_CheckUnit(unit) then return end
@@ -374,7 +372,6 @@ function ES_DispelEnemyBuff:Handler3(event, unit, ...)
 	end
 	if check then ES_CheckAura(unit) end
 end
-ES_DispelEnemyBuff:RegisterEvent("NAME_PLATE_UNIT_ADDED", "Handler3")
 
 function ES_DEB_ListToggle(list, btn, setting,tmpl)
 	local table = {}
@@ -940,15 +937,15 @@ function ES_DispelEnemyBuff:OnInitialize()
 		if not showExplosive and not unreg and (not showBE or not(addon.rID == 10))  then
 			load = false
 			print('|cFFFF0000ES_DispelEnemyBuff |r','No auras is set to be tracked. Addon disabled!')
-			ES_DispelEnemyBuff:UnregisterEvent("UNIT_AURA")
-			ES_DispelEnemyBuff:UnregisterEvent("NAME_PLATE_UNIT_ADDED")
-			ES_DispelEnemyBuff:UnregisterEvent("NAME_PLATE_UNIT_REMOVED")
 		end
 	end
 	if load then
 		if not _G["ES_DispelEnemyBuff_Settings"] then
 			CreateSettingsFrame()
 		end
+		ES_DispelEnemyBuff:RegisterEvent("NAME_PLATE_UNIT_REMOVED", "Handler1")
+		ES_DispelEnemyBuff:RegisterEvent("UNIT_AURA", "Handler2")
+		ES_DispelEnemyBuff:RegisterEvent("NAME_PLATE_UNIT_ADDED", "Handler3")
 		ForceGenerate()
 	end
 end
