@@ -7,6 +7,9 @@ Created spesificly for my own setup of nameplates. But hosting on GitHub so my f
 ---
 [Latest Release](/../../releases/latest) :file_folder:
 
+:memo: Changes: v1.0.5
+- (Bugfix): Moved event-registering to the initialization stage. Hopefully preventing issues when addon is loaded slowly.
+
 :memo: Changes: v1.0.4
 - (Bugfix): Cleaned up the class lookup. Fixing the issue with hunters not seeing dispellable enrage.
 
