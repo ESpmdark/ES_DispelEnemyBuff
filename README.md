@@ -7,6 +7,11 @@ Created spesificly for my own setup of nameplates. But hosting on GitHub so my f
 ---
 [Latest Release](/../../releases/latest) :file_folder:
 
+:memo: Changes: v1.0.6
+- (General): Code cleanup.
+- (Fix): Added missing check for blood elves.
+- (Fix): Filter type of units. Duplicate events for certain unittypes caused auras to never be removed once nameplate disappeared.
+
 :memo: Changes: v1.0.5
 - (Bugfix): Moved event-registering to the initialization stage. Hopefully preventing issues when addon is loaded slowly.
 
