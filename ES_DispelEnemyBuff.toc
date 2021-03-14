@@ -2,7 +2,7 @@
 ## Title: ES_DispelEnemyBuff
 ## Author: Elêssar 
 ## Notes: Show dispellable (by you) buffs on enemy nameplate.
-## Version: 1.0.5
+## Version: 1.0.6
 ## OptionalDeps: Ace3
 ## SavedVariables: ESDEB_DB
 

@@ -1,6 +1,18 @@
 ES_DispelEnemyBuff = LibStub("AceAddon-3.0"):NewAddon("ES_DispelEnemyBuff", "AceEvent-3.0")
 local _, addon = ...
 ESDEB_DB = {}
+--/ Blizzard functions to local
+local GetNamePlateForUnit = C_NamePlate.GetNamePlateForUnit
+local GetRaidTargetIndex = GetRaidTargetIndex
+local UnitReaction = UnitReaction
+local UnitIsPlayer = UnitIsPlayer
+local UnitBuff = UnitBuff
+local UnitName = UnitName
+local GetRaidTargetIndex = GetRaidTargetIndex
+local GetTime = GetTime
+local sort = sort
+local tinsert = tinsert
+--/
 --/ Vars
 local framePool,auraPool,btnPool = {},{},{}
 local currTab,testing
@@ -68,8 +80,8 @@ local function getFrame()
 	frame:SetFrameStrata("BACKGROUND")
 	frame.txt = frame:CreateFontString(nil)
 	frame.txt:SetFont("Fonts\\FRIZQT__.TTF", auraWidth/1.5, "OUTLINE")
-	frame.txt:SetPoint("CENTER", frame, "TOP", 0, 0)
-	frame.txt:SetTextColor(1,0,1,1)
+	frame.txt:SetPoint("BOTTOM", frame, "TOP", 0, 0)
+	frame.txt:SetTextColor(1,0.5,0.5,1)
 	frame.icon = frame:CreateTexture(nil)
 	frame.icon:SetAllPoints(frame)
 	frame.Backdrop = frame:CreateTexture(nil, "BACKGROUND")
@@ -90,13 +102,10 @@ end
 local function ForceGenerate()
 	for i=1,50,1 do
 		local f = getFrame()
-	end
-	for _,frame in pairs(framePool) do
-		if frame.show then
-			frame.show = false
-			frame.unit = nil
-			frame:Hide()
-		end
+		f.show = false
+		f.unit = nil
+		f.parent = nil
+		f:Hide()
 	end
 end
 
@@ -123,7 +132,7 @@ local function HideFrame(unit)
 end
 
 local function UpdateNameplate(unit)
-	local parent = C_NamePlate.GetNamePlateForUnit(unit)
+	local parent = GetNamePlateForUnit(unit)
 	local aura_number = 0
 	if GetRaidTargetIndex(unit) then
 		aura_number = 1
@@ -132,7 +141,7 @@ local function UpdateNameplate(unit)
 	
 	local handletest = false
 	local auras = auraPool[unit]
-	if testing and (C_NamePlate.GetNamePlateForUnit("target") == parent) then
+	if testing and (GetNamePlateForUnit("target") == parent) then
 		handletest = true
 		auras = addon.testauras
 	end
@@ -198,7 +207,7 @@ local function UpdateNameplate(unit)
 		
 		if handletest then
 			frame.test = true
-			expire = GetTime() + state.expirationTime
+			expire = GetTime()
 		else
 			if state.expirationTime then
 				expire = GetTime() - (dur - (state.expirationTime - GetTime()))
@@ -275,7 +284,7 @@ local function ES_CheckAura(unit)
 				isStealable = true,
 			}
 			if NEAisShowBuff(state) then
-				table.insert(locstates, state)
+				tinsert(locstates, state)
 			end
 	else
 		for i = 1, 255 do
@@ -286,36 +295,27 @@ local function ES_CheckAura(unit)
 			if dType then debuffType = dType else debuffType = "" end
 			
 			if (not blacklist[spellId]) then
-				if whitelist[spellId] or (isStealable and addon.canPurge[addon.cID][debuffType]) or rBelf(debuffType) then
+				if whitelist[spellId] or (isStealable and (addon.canPurge[addon.cID] and addon.canPurge[addon.cID][debuffType])) or rBelf(debuffType) then
 					numAuras = numAuras + 1
+					local tmpstack
 					if (spellId == 209859 ) then -- Iterate and combine all bolster auras into one
 						bolster = bolster + 1
-						state = {
-							show = true,
-							spellId = spellId,
-							unit = unit,
-							duration = duration,
-							expirationTime = expirationTime,
-							icon = icon,
-							stacks = bolster,
-							type = debuffType,
-							cloneId = unit.."-"..spellId,
-							isStealable = cSteal(spellId, isStealable),
-						}
+						tmpstack = bolster
 					else
-						state = {
-							show = true,
-							spellId = spellId,
-							unit = unit,
-							duration = duration,
-							expirationTime = expirationTime,
-							icon = icon,
-							stacks = count or 0,
-							type = debuffType,
-							cloneId = unit.."-"..spellId,
-							isStealable = cSteal(spellId, isStealable),
-						}
+						tmpstack = count or 0
 					end
+					state = {
+						show = true,
+						spellId = spellId,
+						unit = unit,
+						duration = duration,
+						expirationTime = expirationTime,
+						icon = icon,
+						stacks = tmpstack,
+						type = debuffType,
+						cloneId = unit.."-"..spellId,
+						isStealable = cSteal(spellId, isStealable),
+					}
 				end
 			else
 				state = {
@@ -323,14 +323,14 @@ local function ES_CheckAura(unit)
 				}
 			end
 			if NEAisShowBuff(state) then
-				table.insert(locstates, state)
+				tinsert(locstates, state)
 			end
 		end
 	end
 	auraPool[unit] = nil
 	auraPool[unit] = {}
 	if (numAuras > 0) then
-		table.sort(locstates, function(t1, t2)
+		sort(locstates, function(t1, t2)
 				if not t2 then
 					return true
 				end
@@ -345,7 +345,9 @@ end
 
 local function ES_CheckUnit(unit)
 	if not unit then return false end
-	if not UnitExists(unit) or unit == "target" or not C_NamePlate.GetNamePlateForUnit(unit) then return false end
+	local clean,_ = string.gsub(tostring(unit), '(%d+)', '')
+	if not (clean == "nameplate") then return false end
+	if not UnitExists(unit) or unit == "target" or not GetNamePlateForUnit(unit) then return false end
 	local unitReaction = UnitReaction(unit, "player")
 	local isPlayer = UnitIsPlayer(unit)
 	if (unitReaction and unitReaction >= 5) or not (not isPlayer or showPlayers) then
@@ -360,17 +362,20 @@ function ES_DispelEnemyBuff:Handler1(event, unit, ...)
 end
 
 function ES_DispelEnemyBuff:Handler2(event, unit, ...)
-	if ES_CheckUnit(unit) then ES_CheckAura(unit) end
+	if ES_CheckUnit(unit) then
+		ES_CheckAura(unit)
+	end
 end
 
 function ES_DispelEnemyBuff:Handler3(event, unit, ...)
-	if not ES_CheckUnit(unit) then return end
-	local check = false
-	for i = 1, 2, 1 do
-		if UnitBuff(unit, i) then check = true end
-		break
+	if ES_CheckUnit(unit) then
+		local check = false
+		for i = 1, 2, 1 do
+			if UnitBuff(unit, i) then check = true end
+			break
+		end
+		if check then ES_CheckAura(unit) end
 	end
-	if check then ES_CheckAura(unit) end
 end
 
 function ES_DEB_ListToggle(list, btn, setting,tmpl)
@@ -529,9 +534,9 @@ function ESDEB_refreshList(tbl)
 	end
 	local sorted = {}
 	for id,_ in pairs(tbl) do
-		table.insert(sorted, id)
+		tinsert(sorted, id)
 	end
-	table.sort(sorted)
+	sort(sorted)
 	local count = 0
 	for _, spellId in ipairs(sorted) do
 		local name, _, icon = GetSpellInfo(spellId)
@@ -712,7 +717,7 @@ local function SetTabs(frame, numTabs, ...)
 		tab.content = CreateFrame("Frame", nil, ES_DispelEnemyBuff_Container.sf)
 		tab.content:SetSize(280, 500)
 		tab.content:Hide()
-		table.insert(contents, tab.content)
+		tinsert(contents, tab.content)
 		PanelTemplates_TabResize(tab, 0);
 		if (i == 1) then
 			tab:SetPoint("BOTTOMLEFT", ES_DispelEnemyBuff_Container, "TOPLEFT", 5, 0)
@@ -927,14 +932,14 @@ function ES_DispelEnemyBuff:OnInitialize()
 	end
 	ES_UpdateVar()
 	if not addon.canPurge[addon.cID] then
-		local unreg = false
+		local unreg = true
 		for k,v in pairs(whitelist) do
 			if v then
-				unreg = true
+				unreg = false
 				break
 			end
 		end
-		if not showExplosive and not unreg and (not showBE or not(addon.rID == 10))  then
+		if not showExplosive and unreg and (not showBE or not(addon.rID == 10))  then
 			load = false
 			print('|cFFFF0000ES_DispelEnemyBuff |r','No auras is set to be tracked. Addon disabled!')
 		end
